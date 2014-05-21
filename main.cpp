@@ -5,9 +5,6 @@
 // Author: Wallas Henrique
 // Requires Qt Framework
 
-// Requires glm - OpenGL Mathematics
-// https://github.com/g-truc/glm.git
-
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
