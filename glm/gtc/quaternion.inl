@@ -255,7 +255,11 @@ namespace detail
 	template <typename T, precision P>
 	struct compute_dot<tquat, T, P>
 	{
+<<<<<<< HEAD
 		static T call(tquat<T, P> const & x, tquat<T, P> const & y)
+=======
+		static GLM_FUNC_QUALIFIER T call(tquat<T, P> const & x, tquat<T, P> const & y)
+>>>>>>> a84e0c05e492d91e98d530a371ff0ff4088a8d16
 		{
 			tvec4<T, P> tmp(x.x * y.x, x.y * y.y, x.z * y.z, x.w * y.w);
 			return (tmp.x + tmp.y) + (tmp.z + tmp.w);

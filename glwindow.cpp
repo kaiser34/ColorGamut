@@ -7,8 +7,11 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+<<<<<<< HEAD
 #include <glu.h>
 
+=======
+>>>>>>> a84e0c05e492d91e98d530a371ff0ff4088a8d16
 #include <iostream>
 #include <color.h>
 #include <random>

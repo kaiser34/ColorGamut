@@ -38,8 +38,12 @@ namespace detail
 		volatile float f = 1e10;
 
 		for(int i = 0; i < 10; ++i)	
+<<<<<<< HEAD
 			f *= f;             // this will overflow before
 								// the for­loop terminates
+=======
+			f *= f; // this will overflow before the for loop terminates
+>>>>>>> a84e0c05e492d91e98d530a371ff0ff4088a8d16
 		return f;
 	}
 
