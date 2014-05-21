@@ -64,13 +64,8 @@ namespace glm
 		
 	/// Build a saturation matrix.
 	/// @see gtx_color_space
-<<<<<<< HEAD
-	template <typename T, precision P>
-	GLM_FUNC_DECL detail::tmat4x4<T, P> saturation(
-=======
 	template <typename T>
 	GLM_FUNC_DECL detail::tmat4x4<T, defaultp> saturation(
->>>>>>> a84e0c05e492d91e98d530a371ff0ff4088a8d16
 		T const s);
 
 	/// Modify the saturation of a color.

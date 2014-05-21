@@ -23,7 +23,7 @@ private:
     void drawScene(glm::mat4 modelMatrix);
     int SIZE_OF_INDICES = 0;
     unsigned int * indices;
-    void findOptimalColors();
+    void generateVertexes();
     QPoint _lastPoint;
     float _rotation =0;
     glm::vec3 _eye;

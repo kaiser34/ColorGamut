@@ -46,11 +46,6 @@
 #if(GLM_ARCH != GLM_ARCH_PURE)
 
 #if(GLM_ARCH & GLM_ARCH_SSE2)
-<<<<<<< HEAD
-#	include "../core/intrinsic_common.hpp"
-#	include "../core/intrinsic_geometric.hpp"
-=======
->>>>>>> a84e0c05e492d91e98d530a371ff0ff4088a8d16
 #   include "../gtx/simd_mat4.hpp"
 #else
 #	error "GLM: GLM_GTX_simd_quat requires compiler support of SSE2 through intrinsics"
