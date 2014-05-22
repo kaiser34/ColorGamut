@@ -15,3 +15,6 @@ TEMPLATE = app
 SOURCES += *.cpp
 HEADERS  += *.h
 
+OTHER_FILES += \
+    vertexShader.vsh \
+    fragmentShader.fsh
