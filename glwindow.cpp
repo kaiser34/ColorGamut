@@ -11,7 +11,7 @@
 #include <random>
 #include <vector>
 #include <set>
-#include "gamutShaders.h"
+//#include "gamutShaders.h"
 
 #include <QOpenGLShader>
 
@@ -20,12 +20,26 @@
 static const float DEFAULT_EYE_X  = 0;
 static const float DEFAULT_EYE_Y  = 1;
 static const float DEFAULT_EYE_Z  = 5;
+
+const glm::mat4 CIEXYZ_TO_CIERGB_MAT  ({ 2.960135, -0.471621, -0.563455,     0,
+                                 -0.500461,  1.287182,  0.086082,     0,
+                                  0.036281, -0.052922,  0.528317,     0,
+                                         0,         0,         0,     1});
+
+
+
+const glm::mat4 CIERGB_TO_CIEXYZ_MAT  ({ 0.490,  0.310,  0.200,     0,
+                                  0.177,  0.813,  0.011,     0,
+                                  0.000,  0.010,  0.990,     0,
+                                      0,      0,      0,     1});
+
 GLWindow::GLWindow( QWidget * parent ) : QGLWidget(parent),
     _eye(glm::vec3(DEFAULT_EYE_X,DEFAULT_EYE_Y,DEFAULT_EYE_Z)),
     _cieXYZ2RGB(glm::mat4()),
     _modeType(ModeType::CIEXYZ)
 {
     qApp->installEventFilter(this);
+    setWindowTitle("CIE XYZ");
 
 }
 
@@ -213,12 +227,69 @@ void GLWindow::drawDefaultAxis()
     glEnd();
 }
 
-
-void GLWindow::drawScene (glm::mat4 modelViewMatrix, glm::mat4 projection)
+void GLWindow::drawCieRGB2CieXYZAxis(glm::mat4 modelViewMatrix, glm::mat4 projection)
 {
 
+}
+
+void GLWindow::drawSecondaryAxis()
+{
+
+    glUseProgram(0);
+
+    glColor3f(1,0,0);
+
+    glBegin(GL_LINES);
+    glVertex3f(0,0,0);
+    glVertex3f(1,0,0);
+    glEnd();
+
+    glColor3f(0,1,0);
+    glBegin(GL_LINES);
+    glVertex3f(0,0,0);
+    glVertex3f(0,1,0);
+    glEnd();
+
+    glColor3f(0,0,1);
+    glBegin(GL_LINES);
+    glVertex3f(0,0,0);
+    glVertex3f(0,0,1);
+    glEnd();
+
+    glColor3f(1,1,1);
+    glBegin(GL_LINES);
+    glVertex3f(1,0,0);
+    glVertex3f(0,1,0);
+    glVertex3f(0,1,0);
+    glVertex3f(0,0,1);
+    glVertex3f(0,0,1);
+    glVertex3f(1,0,0);
+    glEnd();
+
+}
+
+void GLWindow::drawScene (glm::mat4 viewMatrix, glm::mat4 projection)
+{
+
+    // Draw principal axis
     drawDefaultAxis();
 
+    // Draw secondary axis if needed
+    glm::mat4 modelViewMatrix;
+
+    if(_modeType == ModeType::CIEXYZ2RGB)
+    {
+        modelViewMatrix = glm::transpose(CIEXYZ_TO_CIERGB_MAT);
+        modelViewMatrix = viewMatrix * modelViewMatrix ;
+        glLoadMatrixf(glm::value_ptr(modelViewMatrix));
+        drawSecondaryAxis();
+    }else{
+        modelViewMatrix = viewMatrix;
+    }
+
+
+
+    // Draw points
     _shaderManager.bind();
 
     glm::mat4 mvp = projection * modelViewMatrix;
@@ -228,8 +299,6 @@ void GLWindow::drawScene (glm::mat4 modelViewMatrix, glm::mat4 projection)
     //_shaderManager.setUniformValue("MVP",matrix);
     _shaderManager.setUniformValue("MVP",matrix);
     _shaderManager.setUniformValue("cieXYZ2RGB",cieXYZ2RGBmatrix);
-
-
 
     glBindBuffer(GL_ARRAY_BUFFER,_vBuffer[0]);
 
@@ -252,17 +321,17 @@ void GLWindow::paintGL()
 
     glm::vec3 center(0,0,0);
     glm::vec3 up(0,1,0);
-    glm::mat4 modelViewMatrix = glm::lookAt(_eye,center,up);
+    glm::mat4 viewMatrix = glm::lookAt(_eye,center,up);
 
-    modelViewMatrix = glm::rotate(modelViewMatrix,_rotation,glm::vec3(0,1,0));
+    viewMatrix = glm::rotate(viewMatrix,_rotation,glm::vec3(0,1,0));
 
     glMatrixMode(GL_PROJECTION);
     glLoadMatrixf(glm::value_ptr(projection));
 
     glMatrixMode(GL_MODELVIEW);
-    glLoadMatrixf(glm::value_ptr(modelViewMatrix));
+    glLoadMatrixf(glm::value_ptr(viewMatrix));
 
-    drawScene(modelViewMatrix,projection);
+    drawScene(viewMatrix,projection);
 }
 
 void GLWindow::resizeGL(int width, int height)
@@ -272,7 +341,14 @@ void GLWindow::resizeGL(int width, int height)
 
 bool GLWindow::eventFilter(QObject *obj, QEvent *event)
 {
-    if (event->type() == QEvent::MouseMove )
+    if(event->type() == QEvent::MouseButtonPress)
+    {
+        QMouseEvent *mouseEvent = static_cast<QMouseEvent*>(event);
+        if(mouseEvent->buttons() == Qt::LeftButton){
+            _lastPoint = mouseEvent->pos();
+        }
+    }
+    else if (event->type() == QEvent::MouseMove )
     {
         QMouseEvent *mouseEvent = static_cast<QMouseEvent*>(event);
         if(mouseEvent->buttons() == Qt::LeftButton){
@@ -296,22 +372,12 @@ bool GLWindow::eventFilter(QObject *obj, QEvent *event)
         case Qt::Key_1:
             _modeType = ModeType::CIEXYZ;
             _cieXYZ2RGB = glm::mat4();
+            setWindowTitle("CIE XYZ");
             break;
         case Qt::Key_2:
-            _modeType = ModeType::CIERGB;
-//            _cieXYZ2RGB = glm::mat4({ 2.2372f,  -0.90200f,  -0.4701f,    0,
-//                                     -0.5272f,   1.43520f,   0.0920f,    0,
-//                                      0.0530f,  -0.01415f,   1.0090f,    0,
-//                                            0,          0,         0,    1});
-            _cieXYZ2RGB = glm::mat4({ 2.960135, -0.471621, -0.563455,     0,
-                                     -0.500461,  1.287182,  0.086082,     0,
-                                      0.036281, -0.052922,  0.528317,     0,
-                                             0,         0,         0,     1});
-            _cieXYZ2RGB =glm::transpose(_cieXYZ2RGB);
-            break;
-        case Qt::Key_3:
             _modeType = ModeType::CIEXYZ2RGB;
             _cieXYZ2RGB = glm::mat4();
+            setWindowTitle("CIE RGB in base CIE XYZ");
             break;
 
         }

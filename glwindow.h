@@ -26,13 +26,10 @@ protected:
     void initializeGL();
     void paintGL();
     void resizeGL(int width, int height);
-private:
-    void drawDefaultAxis();
-    void drawNewBase();
-    void drawScene(glm::mat4 modelViewMatrix, glm::mat4 projectionMatrix);
+private:    
     int SIZE_OF_INDICES = 0;
     unsigned int * indices;
-    void generateGamutData();
+
     QPoint _lastPoint;
     float _rotation =0;
     glm::vec3 _eye;
@@ -46,10 +43,17 @@ private:
     QOpenGLShaderProgram _shaderManager;
 
     enum class ModeType{
-        CIEXYZ, CIERGB, CIEXYZ2RGB
+        CIEXYZ, CIEXYZ2RGB
     };
 
     ModeType _modeType;
+
+    void drawDefaultAxis();
+    void drawNewBase();
+    void drawScene(glm::mat4 modelViewMatrix, glm::mat4 projectionMatrix);
+    void generateGamutData();
+    void drawCieRGB2CieXYZAxis(glm::mat4 modelViewMatrix, glm::mat4 projection);
+    void drawSecondaryAxis();
 
 };
 
