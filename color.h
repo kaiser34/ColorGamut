@@ -71,6 +71,9 @@ float corGetD65(float lambda);
 /* gets radiace of a Illuminant A for a given lambda , [380,780] nm */
 float corGetA(float lambda);
 
+/* gets radiance of a illumnant (A,D50 or D65) for a given lamda, [380,780] nm */
+float corGetIllum(float lambda, int reference_light);
+
 /* gets the chromaticity of a pure light source (single lambda) lambda between [380,780] nm */
 int corGetCIExyfromLambda(float lambda, float* x, float* y);
 
@@ -83,5 +86,11 @@ int corCIELabtosRGB(float L, float a, float b, float* R, float* G, float* B, int
 /* finds the sRGB value of a color with CIELab, (a,b) value with the maximum lightness L */
 int corCIEab_tosRGBwithMaxL(float a, float b, float* R, float* G, float* B, float* L,int reference_light);
 
+/* Computes the most saturated CIE XYZ color from an spectrum centred at lambda_bar that has the luminance Y_bar */
+int getCIEXYZGamutBorder(float Y_bar, float lambda_bar, float* X, float* Y, float* Z, float* betha, int reference_light );
+
+/* if we assing a scale [0,1] to the rage 380..780, with equal area under the V(lambda) curve
+   returns the lambda that correponds to a given value of scale. */
+float corGetLambda(float scale);
 
 #endif

@@ -32,10 +32,11 @@
 *
 */
 
+#include <stdio.h>
+#include <stdlib.h>
 #include<assert.h>
 #include<math.h>
 
-#include <iostream>
 #include"color.h"
 
 #define RAD2DEG(xX) (180.0f/3.14159265358979f * (xX))
@@ -571,11 +572,69 @@ const struct Illuminat_spectrum {   float lambda, A, D65, C, D50, D55, D75;  } i
       {775,2.39370f,0.65094f,0.58500f,0.80599f,0.73872f,0.59838f},
       {780,2.41675f,0.63383f,0.59100f,0.78274f,0.71818f,0.58324f}};
 
+double lambdaScale[401]= {0.0000004,
+                          0.0000008,0.0000012,0.0000017,0.0000022,0.0000028,0.0000035,0.0000043,0.0000051,0.0000061,0.0000073,
+                          0.0000085,0.0000099,0.0000115,0.0000133,0.0000154,0.0000177,0.0000203,0.0000233,0.0000266,0.0000303,
+                          0.0000344,0.0000388,0.0000437,0.0000490,0.0000550,0.0000618,0.0000695,0.0000783,0.0000883,0.0000997,
+                          0.0001124,0.0001267,0.0001428,0.0001609,0.0001813,0.0002043,0.0002302,0.0002594,0.0002924,0.0003298,
+                          0.0003723,0.0004206,0.0004752,0.0005364,0.0006048,0.0006804,0.0007638,0.0008552,0.0009550,0.0010636,
+                          0.0011812,0.0013083,0.0014453,0.0015923,0.0017499,0.0019184,0.0020982,0.0022897,0.0024929,0.0027082,
+                          0.0029355,0.0031752,0.0034275,0.0036928,0.0039717,0.0042647,0.0045724,0.0048955,0.0052345,0.0055901,
+                          0.0059630,0.0063539,0.0067635,0.0071925,0.0076417,0.0081119,0.0086039,0.0091184,0.0096561,0.0102176,
+                          0.0108035,0.0114144,0.0120511,0.0127147,0.0134063,0.0141271,0.0148782,0.0156612,0.0164776,0.0173290,
+                          0.0182173,0.0191442,0.0201115,0.0211211,0.0221749,0.0232748,0.0244228,0.0256206,0.0268695,0.0281705,
+                          0.0295245,0.0309326,0.0323968,0.0339196,0.0355040,0.0371533,0.0388711,0.0406611,0.0425273,0.0444741,
+                          0.0465059,0.0486278,0.0508444,0.0531604,0.0555805,0.0581090,0.0607508,0.0635120,0.0663997,0.0694225,
+                          0.0725894,0.0759086,0.0793871,0.0830302,0.0868419,0.0908251,0.0949831,0.0993197,0.1038392,0.1085465,
+                          0.1134462,0.1185419,0.1238359,0.1293289,0.1350206,0.1409103,0.1469961,0.1532744,0.1597395,0.1663839,
+                          0.1731986,0.1801749,0.1873056,0.1945849,0.2020080,0.2095705,0.2172677,0.2250942,0.2330440,0.2411109,
+                          0.2492884,0.2575702,0.2659505,0.2744240,0.2829854,0.2916301,0.3003529,0.3091491,0.3180135,0.3269414,
+                          0.3359278,0.3449680,0.3540574,0.3631914,0.3723654,0.3815749,0.3908155,0.4000832,0.4093743,0.4186853,
+                          0.4280129,0.4373535,0.4467035,0.4560595,0.4654179,0.4747749,0.4841267,0.4934694,0.5027987,0.5121103,
+                          0.5213994,0.5306617,0.5398932,0.5490899,0.5582480,0.5673638,0.5764337,0.5854538,0.5944203,0.6033295,
+                          0.6121773,0.6209601,0.6296743,0.6383163,0.6468830,0.6553711,0.6637775,0.6720989,0.6803322,0.6884740,
+                          0.6965209,0.7044698,0.7123179,0.7200627,0.7277019,0.7352335,0.7426554,0.7499661,0.7571641,0.7642484,
+                          0.7712181,0.7780723,0.7848104,0.7914314,0.7979345,0.8043190,0.8105841,0.8167295,0.8227548,0.8286599,
+                          0.8344449,0.8401096,0.8456542,0.8510786,0.8563830,0.8615671,0.8666313,0.8715758,0.8764013,0.8811085,
+                          0.8856985,0.8901721,0.8945300,0.8987731,0.9029020,0.9069175,0.9108203,0.9146107,0.9182889,0.9218544,
+                          0.9253069,0.9286462,0.9318727,0.9349873,0.9379914,0.9408863,0.9436737,0.9463557,0.9489351,0.9514151,
+                          0.9537992,0.9560910,0.9582933,0.9604088,0.9624396,0.9643876,0.9662551,0.9680440,0.9697563,0.9713940,
+                          0.9729589,0.9744530,0.9758780,0.9772362,0.9785295,0.9797601,0.9809302,0.9820417,0.9830971,0.9840984,
+                          0.9850481,0.9859482,0.9868010,0.9876083,0.9883719,0.9890937,0.9897752,0.9904182,0.9910243,0.9915952,
+                          0.9921323,0.9926373,0.9931115,0.9935565,0.9939737,0.9943645,0.9947302,0.9950724,0.9953925,0.9956919,
+                          0.9959723,0.9962351,0.9964815,0.9967127,0.9969298,0.9971338,0.9973257,0.9975061,0.9976757,0.9978348,
+                          0.9979836,0.9981225,0.9982517,0.9983718,0.9984834,0.9985870,0.9986831,0.9987723,0.9988551,0.9989320,
+                          0.9990033,0.9990696,0.9991313,0.9991887,0.9992423,0.9992923,0.9993391,0.9993828,0.9994238,0.9994622,
+                          0.9994981,0.9995317,0.9995631,0.9995924,0.9996198,0.9996455,0.9996694,0.9996918,0.9997127,0.9997323,
+                          0.9997506,0.9997677,0.9997836,0.9997985,0.9998124,0.9998253,0.9998374,0.9998487,0.9998592,0.9998690,
+                          0.9998781,0.9998867,0.9998946,0.9999020,0.9999090,0.9999154,0.9999215,0.9999271,0.9999323,0.9999372,
+                          0.9999417,0.9999459,0.9999498,0.9999534,0.9999568,0.9999600,0.9999629,0.9999656,0.9999681,0.9999704,
+                          0.9999726,0.9999746,0.9999765,0.9999782,0.9999798,0.9999813,0.9999827,0.9999840,0.9999852,0.9999863,
+                          0.9999874,0.9999883,0.9999893,0.9999901,0.9999909,0.9999916,0.9999923,0.9999930,0.9999936,0.9999941,
+                          0.9999947,0.9999951,0.9999956,0.9999960,0.9999964,0.9999968,0.9999971,0.9999975,0.9999978,0.9999980,
+                          0.9999983,0.9999986,0.9999988,0.9999990,0.9999992,0.9999994,0.9999995,0.9999997,0.9999999,1.0000000};
+
+
+static int index(float x) {
+    return (int) (x-380);
+}
+
+static float lambda(int index) {
+    return (float) (380+index);
+}
+
+static int next(int i) {
+    return (i!=400) ? i+1 : 0;
+}
+
+static int previous(int i) {
+    return (i!=0) ? i-1 : 400;
+}
 
 
 /************************ exported functions */
 int corCIEXYZtoCIERGB(float X,float Y, float Z, float* R, float* G, float* B){
-    double m[3*3] = {2.960135,-0.471621,-0.563455, -0.500461,1.287182,0.086082, 0.036281,-0.052922,0.528317};
+    double m[3*3] = { 2.36440, -0.89580, -0.46770, -0.51483, 1.42523, 0.08817, 0.00520, -0.01440, 1.00921 };
     *R = (float) (m[0]*X+m[1]*Y+m[2]*Z);
     *G = (float) (m[3]*X+m[4]*Y+m[5]*Z);
     *B = (float) (m[6]*X+m[7]*Y+m[8]*Z);
@@ -916,10 +975,6 @@ static float getFunctionValue(float x, float xmin, int npoints, float delta_x, f
          else
              y=(1-r)*yv[i]+r*yv[i+1];
      }
-    else{
-        std::cout <<" W - out of bounds!" << x <<std::endl;
-    }
-
     return y;
 }
 
@@ -953,6 +1008,8 @@ int corCIELabtosRGB(float L, float a, float b, float* R, float* G, float* B, int
     return ok;
 }
 
+
+
 int corCIEab_tosRGBwithMaxL(float a, float b, float* R, float* G, float* B, float* L,int reference_light) {
     float R1=0,G1=0,B1=0,lum=0;
     int ok=0;
@@ -971,6 +1028,133 @@ int corCIEab_tosRGBwithMaxL(float a, float b, float* R, float* G, float* B, floa
     }
     return ok;
 }
+
+
+/* Computes the most saturated CIE XYZ color from an spectrum centred at lambda_bar that has the luminance Y_bar */
+int getCIEXYZGamutBorder(float Y_bar, float lambda_bar, float* X, float* Y, float* Z, float* betha, int reference_light )
+{
+    float sumVector[401]; //,betha[401];
+    float sum;
+    int   beginIndex,middleIndex,endIndex;
+
+    float lambda,targetArea,deltaArea,factor;
+    float sum_total,sum_x,sum_y,sum_z;
+    float x_bar, y_bar, z_bar;
+    float kw;
+    float Xw=reference_white[reference_light][0];
+    float Yw=reference_white[reference_light][1];
+    float Zw=reference_white[reference_light][2];
+    int i;
+
+    for (i=0;i<401;i++) betha[i]=0;
+    if (Y_bar<0.001) { *X=0; *Y=0; *Z=0; return 0; }
+
+    sum_x=sum_y=sum_z=sum_total=0;
+    for (lambda=380; lambda<=780; lambda+=1) {
+        float Lw = corGetIllum(lambda,reference_light);
+        i = index(lambda);
+        x_bar = spec[i].x_bar;
+        y_bar = spec[i].y_bar;
+        z_bar = spec[i].z_bar;
+        sumVector[i]=Lw*(Xw*x_bar+Yw*y_bar+Zw*z_bar);
+        sum_total+=sumVector[i];
+        sum_x += Lw*x_bar; sum_y += Lw*y_bar; sum_z += Lw*z_bar;
+        betha[i]=0;
+    }
+
+    kw=1/sum_y;  Xw=kw*sum_x; Yw=1; Zw=kw*sum_z;
+    targetArea = Y_bar*(Xw*Xw+Yw*Yw+Zw*Zw)/kw;
+
+    if (fabs((targetArea-Y_bar*sum_total)/targetArea)>0.01) {
+        printf("targetArea = %f != area = %f\n",targetArea,Y_bar*sum_total);
+        printf("Xw = %f %f Yw=%f  %f  Zw = %f  %f\n",Xw,sum_x/sum_y,Yw,sum_y/sum_y,Zw,sum_z/sum_y);
+        exit(1);
+    }
+
+    middleIndex = index(lambda_bar);
+    betha[middleIndex]=1;
+    sum = sumVector[middleIndex];
+    beginIndex=middleIndex;
+    endIndex = middleIndex;
+
+    if (sum>=targetArea) {  /* areas muito pequenas, espectro de um ponto */
+        betha[middleIndex]=targetArea/sum;
+        sum = betha[middleIndex]*sumVector[middleIndex];
+    } else {
+        while (sum<targetArea) {
+            beginIndex=previous(beginIndex);
+            endIndex=next(endIndex);
+            if (beginIndex==middleIndex||endIndex==middleIndex) {
+                printf("Erro: *** utilizou a area toda e nao alcancou o alvo\n");
+                exit(1);
+            }
+            deltaArea=sumVector[beginIndex]+sumVector[endIndex];
+            sum+=deltaArea;
+            betha[beginIndex]=1;
+            betha[endIndex]=1;
+        }
+        /* adjust difference with end points */
+        sum -= deltaArea;
+        factor = (targetArea-sum)/deltaArea;
+        betha[beginIndex] = factor;
+        betha[endIndex] = factor;
+        sum += betha[beginIndex]*sumVector[beginIndex]+betha[endIndex]*sumVector[endIndex];
+        if (fabs(sum-targetArea)>0.001) {
+            printf("**ERRO: Area=%f != Target Area=%f\n",sum,targetArea);
+            exit(1);
+        }
+    }
+
+    sum_x=sum_y=sum_z=0;
+    for (lambda=380; lambda<=780; lambda+=1) {
+        float Lw = corGetIllum(lambda,reference_light);
+        i = index(lambda);
+        sum_x += Lw*betha[i]*spec[i].x_bar;
+        sum_y += Lw*betha[i]*spec[i].y_bar;
+        sum_z += Lw*betha[i]*spec[i].z_bar;
+    }
+    *X = kw*sum_x;
+    *Y = kw*sum_y;
+    *Z = kw*sum_z;
+
+    return 0;
+}
+
+
+float   corGetLambda(float scale){
+    if (scale<=0)
+        return 380;
+    else if (scale>=1)
+        return 780;
+    else {
+        int i=0;
+        while (i<401 && scale>lambdaScale[i]) i++;
+        return (float) (380 + i);
+    }
+}
+
+
+ int corCIEXYZfromReflectance401(float* reflectance, float* X, float* Y, float* Z, int reference_light)
+ {
+    float sum_x=0, sum_y=0, sum_z=0, sum_w=0;
+    float lambda;
+
+    for (lambda=380; lambda<780; lambda+=1) {
+        float Lw = corGetIllum(lambda, reference_light);
+        float betha = reflectance[(int)lambda-380];
+        float x_bar,y_bar,z_bar;
+        corGetCIExyz(lambda,&x_bar,&y_bar,&z_bar);
+        sum_x += Lw*betha*x_bar;
+        sum_y += Lw*betha*y_bar;
+        sum_z += Lw*betha*z_bar;
+        sum_w += Lw*y_bar;
+    }
+    *X = sum_x/sum_w;
+    *Y = sum_y/sum_w;
+    *Z = sum_z/sum_w;
+    return 1;
+}
+
 
 #undef RAD2DEG
 #undef DEG2RAD

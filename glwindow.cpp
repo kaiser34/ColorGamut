@@ -1,17 +1,19 @@
+
 #include "glwindow.h"
 #include <QtGui>
 #include <QtOpenGL>
 #include <QWidget>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
 #include <iostream>
 #include <color.h>
 #include <random>
 #include <vector>
 #include <set>
-//#include "gamutShaders.h"
+
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
 
 #include <QOpenGLShader>
 
@@ -21,26 +23,23 @@ static const float DEFAULT_EYE_X  = 0;
 static const float DEFAULT_EYE_Y  = 1;
 static const float DEFAULT_EYE_Z  = 5;
 
-const glm::mat4 CIEXYZ_TO_CIERGB_MAT  ({ 2.960135, -0.471621, -0.563455,     0,
-                                 -0.500461,  1.287182,  0.086082,     0,
-                                  0.036281, -0.052922,  0.528317,     0,
-                                         0,         0,         0,     1});
 
-
+const glm::mat4 CIEXYZ_TO_CIERGB_MAT  ({  2.36440,  -0.89580, -0.46770,     0,
+                                         -0.51483,   1.42523,  0.08817,     0,
+                                          0.00520,  -0.01440,  1.00921,     0,
+                                                0,         0,        0,     1});
 
 const glm::mat4 CIERGB_TO_CIEXYZ_MAT  ({ 0.490,  0.310,  0.200,     0,
-                                  0.177,  0.813,  0.011,     0,
-                                  0.000,  0.010,  0.990,     0,
-                                      0,      0,      0,     1});
+                                         0.177,  0.813,  0.011,     0,
+                                         0.000,  0.010,  0.990,     0,
+                                             0,      0,      0,     1});
 
 GLWindow::GLWindow( QWidget * parent ) : QGLWidget(parent),
     _eye(glm::vec3(DEFAULT_EYE_X,DEFAULT_EYE_Y,DEFAULT_EYE_Z)),
-    _cieXYZ2RGB(glm::mat4()),
     _modeType(ModeType::CIEXYZ)
 {
     qApp->installEventFilter(this);
     setWindowTitle("CIE XYZ");
-
 }
 
 GLWindow::~GLWindow()
@@ -102,14 +101,18 @@ void GLWindow::generateGamutData()
 
     float *integral = new float[NUM_SAMPLES];
 
-    integral[0]=0;
-    for(int i=1;i<=NUM_SAMPLES;i++){
 
+    integral[0]=0;
+//    float constant = 0;
+    for(int i=1;i<=NUM_SAMPLES;i++)
+    {
         float x_bar,y_bar,z_bar;
         float illuminant = corGetD65((float)(INITIAL_LAMBDA+i*LAMBDA_STEP));
         corGetCIExyz(INITIAL_LAMBDA+i*LAMBDA_STEP,&x_bar,&y_bar,&z_bar);
         integral[i] = illuminant*y_bar + integral[i-1];
     }
+    float constant = 100.0f/integral[NUM_SAMPLES];
+
 
 
     std::set<std::pair<int,int>> mountain_pairs;
@@ -117,7 +120,7 @@ void GLWindow::generateGamutData()
     {
         for (int j=1; j<=NUM_SAMPLES; j++)
         {
-            float sum = ((100.0f/integral[NUM_SAMPLES])*(integral[j]-integral[i-1]));
+            float sum = (constant*(integral[j]-integral[i-1]));
             if(i<j && sum >= INITIAL_LUMINANCE && sum <= FINAL_LUMINANCE)
             {
                 mountain_pairs.insert({i,j});
@@ -130,8 +133,8 @@ void GLWindow::generateGamutData()
     {
         for (int j=1; j<=NUM_SAMPLES; j++)
         {
-            float sum1 = ((100.0f/integral[NUM_SAMPLES])*(integral[i]-integral[0]));
-            float sum2 = ((100.0f/integral[NUM_SAMPLES])*(integral[NUM_SAMPLES]-integral[j-1]));
+            float sum1 = (constant*(integral[i]-integral[0]));
+            float sum2 = (constant*(integral[NUM_SAMPLES]-integral[j-1]));
             float sum = sum1+sum2;
             if(i<j && sum >= INITIAL_LUMINANCE && sum <= FINAL_LUMINANCE)
             {
@@ -139,7 +142,6 @@ void GLWindow::generateGamutData()
             }
         }
     }
-
 
     _numberOfPoints = mountain_pairs.size() + valley_pairs.size();
     float * vertexes = new float[_numberOfPoints*3*sizeof(float)];
@@ -287,18 +289,13 @@ void GLWindow::drawScene (glm::mat4 viewMatrix, glm::mat4 projection)
         modelViewMatrix = viewMatrix;
     }
 
-
-
     // Draw points
     _shaderManager.bind();
 
     glm::mat4 mvp = projection * modelViewMatrix;
     QMatrix4x4 matrix(glm::value_ptr(glm::transpose(mvp)));
-    QMatrix4x4 cieXYZ2RGBmatrix(glm::value_ptr(glm::transpose(_cieXYZ2RGB)));
 
-    //_shaderManager.setUniformValue("MVP",matrix);
     _shaderManager.setUniformValue("MVP",matrix);
-    _shaderManager.setUniformValue("cieXYZ2RGB",cieXYZ2RGBmatrix);
 
     glBindBuffer(GL_ARRAY_BUFFER,_vBuffer[0]);
 
@@ -307,9 +304,6 @@ void GLWindow::drawScene (glm::mat4 viewMatrix, glm::mat4 projection)
     _shaderManager.release();
 
 }
-
-
-
 
 void GLWindow::paintGL()
 {
@@ -371,12 +365,10 @@ bool GLWindow::eventFilter(QObject *obj, QEvent *event)
             break;
         case Qt::Key_1:
             _modeType = ModeType::CIEXYZ;
-            _cieXYZ2RGB = glm::mat4();
             setWindowTitle("CIE XYZ");
             break;
         case Qt::Key_2:
             _modeType = ModeType::CIEXYZ2RGB;
-            _cieXYZ2RGB = glm::mat4();
             setWindowTitle("CIE RGB in base CIE XYZ");
             break;
 

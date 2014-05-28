@@ -39,7 +39,6 @@ private:
     GLuint _vao;
     GLuint _vBuffer[2];
     int _numberOfPoints;
-    glm::mat4 _cieXYZ2RGB; // Should be identity for no conversion
     QOpenGLShaderProgram _shaderManager;
 
     enum class ModeType{
