@@ -352,7 +352,12 @@ bool GLWindow::eventFilter(QObject *obj, QEvent *event)
 
     }else if(event->type() == QEvent::Wheel){
         QWheelEvent *wheelEvent = static_cast<QWheelEvent*>(event);
+#if _WIN32
+        _eye.z -= wheelEvent->angleDelta().y() *0.005;
+#elif __APPLE__
         _eye.z -= wheelEvent->angleDelta().y() *0.05;
+#endif
+
         repaint();
     }else if(event->type() == QEvent::KeyPress){
         QKeyEvent * keyEvent = static_cast<QKeyEvent*>(event);
